@@ -1,15 +1,17 @@
 import Head from 'next/head'
-import { Layout } from 'components/layout'
-import { ChangeEventHandler, useState } from 'react'
-import styled from 'styled-components'
-import { Light as SyntaxHighlighter } from 'react-syntax-highlighter'
-import md from 'react-syntax-highlighter/dist/cjs/languages/hljs/markdown'
-import githubGist from 'react-syntax-highlighter/dist/cjs/styles/hljs/github-gist'
-
-SyntaxHighlighter.registerLanguage('md', md)
+import { Layout } from '~/components/layout'
+import styled, { keyframes } from 'styled-components'
+import { useLocalStorage } from '~/lib/hooks'
+import * as Dialog from '@radix-ui/react-dialog'
+import { Cross1Icon } from '@radix-ui/react-icons'
+import { Button } from '~/components/ui'
+import { Editor } from '~/components/ui'
 
 export default function Home() {
-  const [mdString, setMdString] = useState('# Hello')
+  const [editorContent, setEditorContent] = useLocalStorage(
+    'editor-content',
+    '',
+  )
 
   return (
     <>
@@ -189,62 +191,118 @@ export default function Home() {
           rel='apple-touch-startup-image'
         />
       </Head>
-      <Layout>
-        <Editor value={mdString} onChange={e => setMdString(e.target.value)} />
-      </Layout>
+      <Dialog.Root>
+        <Layout>
+          <Dialog.Portal>
+            <DialogOverlay />
+            <DialogContent>
+              <DialogDescription>
+                Edit the content of the slide here (it&apos;s automatically
+                saved).
+              </DialogDescription>
+              <DialogClose asChild>
+                <Button>
+                  <Cross1Icon />
+                </Button>
+              </DialogClose>
+              <Editor {...{ editorContent, setEditorContent }} />
+            </DialogContent>
+          </Dialog.Portal>
+        </Layout>
+      </Dialog.Root>
     </>
   )
 }
 
-function Editor({
-  value,
-  onChange,
-}: {
-  value: string
-  onChange: ChangeEventHandler<HTMLTextAreaElement>
-}) {
-  return (
-    <EditorWrapper>
-      <Display language='md' style={githubGist}>
-        {value}
-        <Caret>caret</Caret>
-      </Display>
-      <TextArea value={value} onChange={onChange} rows={20} />
-    </EditorWrapper>
-  )
-}
-
-const Caret = styled.span`
-  animation: blink 1s step-end infinite;
-  border-left: 2px solid black;
+const DialogDescription = styled(Dialog.Description)`
+  font-size: ${18 / 16}rem;
 `
 
-const Display = styled(SyntaxHighlighter).attrs({ useInlineStyles: true })`
+const DialogClose = styled(Dialog.Close)`
   position: absolute;
-  background: none !important;
-  padding: 1em 2ch !important;
-  border: 1px solid transparent;
+  right: 24px;
+  top: 24px;
+`
+
+const overlayOpen = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`
+
+const overlayClose = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`
+
+const DialogOverlay = styled(Dialog.Overlay)`
+  position: fixed;
   inset: 0;
-  pointer-events: none;
+  background-color: hsl(230deg 100% 5% / 0.2);
+
+  &[data-state='open'] {
+    animation: ${overlayOpen} 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  &[data-state='closed'] {
+    animation: ${overlayClose} 100ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
 `
 
-const EditorWrapper = styled.div`
-  font-family: monospace;
-  font-size: ${p => p.theme.sizes.editorFontSize};
-  font-weight: ${p => p.theme.sizes.editorFontWeight};
-
-  position: relative;
+const contentOpen = keyframes`
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(1);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 `
 
-const TextArea = styled.textarea`
-  border-radius: ${p => p.theme.sizes.borderRadius};
-  border-color: ${p => p.theme.colors.editorBorderColor};
-  border-width: ${p => p.theme.sizes.editorBorderWidth};
-  width: 60ch;
-  padding: 1em 2ch;
-  resize: none;
-  color: transparent;
-  caret-color: black;
+const contentClose = keyframes`
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 
-  outline: none;
+  to {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(1);
+  }
+`
+
+const DialogContent = styled(Dialog.Content)`
+  padding: 24px;
+  background-color: white;
+  border-radius: ${p => p.theme.sizes.borderRadiusL};
+  box-shadow: hsl(206 22% 7% / 35%) 0px 10px 38px -10px,
+    hsl(206 22% 7% / 20%) 0px 10px 20px -15px;
+
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 900px;
+  height: clamp(400px, calc(100% - 200px), 100%);
+
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  &[data-state='open'] {
+    animation: ${contentOpen} 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  &[data-state='closed'] {
+    animation: ${contentClose} 100ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
 `
