@@ -41,7 +41,7 @@ export function Editor({
   )
 }
 
-const Display = styled(SyntaxHighlighter).attrs({ useInlineStyles: true })`
+const Display = styled(SyntaxHighlighter).attrs({ useInlineStyles: false })`
   position: absolute;
   background: none !important;
   padding: 1em 2ch !important;

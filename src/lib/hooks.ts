@@ -17,7 +17,7 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
     [key],
   )
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const item = localStorage.getItem(key)
     if (item !== null) {
       setState(JSON.parse(item))

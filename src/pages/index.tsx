@@ -39,6 +39,7 @@ export default function Home() {
         <meta name='viewport' content='width=device-width, initial-scale=1' />
         <meta name='msapplication-TileColor' content='#FFF' />
         <meta name='theme-color' content='#FFF' />
+        <link rel='icon' href='/favicon-32x32.png' />
         <link
           rel='apple-touch-icon'
           sizes='57x57'
@@ -208,8 +209,7 @@ export default function Home() {
       </Head>
       <Layout>
         <ErrorBoundary
-          fallbackRender={({ error, resetErrorBoundary }) => {
-            console.log('catching errors!!!')
+          fallbackRender={({ error }) => {
             return <Error>{error.message}</Error>
           }}
           resetKeys={[editorContent]}
@@ -270,7 +270,7 @@ const SlideContent = ({ editorContent }: { editorContent: string }) => {
   const [mdxValue, setMdxValue] = useState<MDXModule>({
     default: () => <div />,
   } as MDXModule)
-  const firstRender = useRef(true)
+  const renderCount = useRef(0)
 
   const MDXContent = mdxValue.default
   const handleError = useErrorHandler()
@@ -278,13 +278,13 @@ const SlideContent = ({ editorContent }: { editorContent: string }) => {
   useEffect(() => {
     const timer = setTimeout(
       () => {
-        firstRender.current = false
+        renderCount.current += 1
         evaluate(editorContent, {
           ...(runtime as EvaluateOptions),
           ...provider,
         }).then(result => setMdxValue(result), handleError)
       },
-      firstRender.current ? 0 : 1500,
+      renderCount.current < 2 ? 0 : 1500,
     )
     return () => clearTimeout(timer)
   }, [editorContent, handleError])
