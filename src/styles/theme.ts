@@ -4,21 +4,25 @@ import 'styled-components'
 
 const sizes = {
   text: `${16 / 16}rem`,
-  editorFontSize: `${20 / 16}rem`,
-  editorFontWeight: 500,
+
+  editor: {
+    fontSize: `${20 / 16}rem`,
+    fontWeight: 500,
+    borderWidth: '1px',
+  },
 
   borderRadiusL: '12px',
   borderRadiusM: '8px',
   borderRadiusS: '6px',
-
-  editorBorderWidth: '1px',
 }
 
 const colors = {
   background: cyan.cyan1,
 
   editor: {
-    border: slate.slate10,
+    border: slate.slate7,
+    backgorund: slate.slate6,
+    focusedBackground: slate.slate3,
     section: blue.blue10,
     xml: orange.orange10,
     xmlName: tomato.tomato9,

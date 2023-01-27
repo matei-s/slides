@@ -1,17 +1,17 @@
 import styled from 'styled-components'
 
 export const Button = styled.button`
-  padding: 4px;
+  padding: 6px;
   border: none;
   border-radius: 4px;
   color: ${p => p.theme.colors.button.content};
   background: ${p => p.theme.colors.background};
 
-  transition: filter 70ms;
+  transition: filter 100ms;
 
   & svg {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
 
   :hover {
@@ -21,5 +21,11 @@ export const Button = styled.button`
   :active {
     filter: brightness(0.8);
     transition: filter 50ms;
+  }
+
+  :after {
+    content: '';
+    position: absolute;
+    inset: -10px;
   }
 `

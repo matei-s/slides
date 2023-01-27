@@ -318,10 +318,10 @@ const overlayOpen = keyframes`
 
 const overlayClose = keyframes`
   from {
-    opacity: 0;
+    opacity: 1;
   }
   to {
-    opacity: 1;
+    opacity: 0;
   }
 `
 
@@ -331,18 +331,18 @@ const DialogOverlay = styled(Dialog.Overlay)`
   background-color: hsl(230deg 100% 5% / 0.2);
 
   &[data-state='open'] {
-    animation: ${overlayOpen} 250ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: ${overlayOpen} 200ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   &[data-state='closed'] {
-    animation: ${overlayClose} 100ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: ${overlayClose} 300ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 `
 
 const contentOpen = keyframes`
   from {
     opacity: 0;
-    transform: translate(-50%, -48%) scale(1);
+    transform: translate(-50%, -49%) scale(1);
   }
   to {
     opacity: 1;
@@ -358,15 +358,15 @@ const contentClose = keyframes`
 
   to {
     opacity: 0;
-    transform: translate(-50%, -48%) scale(1);
+    transform: translate(-50%, -49%) scale(1);
   }
 `
 
 const DialogContent = styled(Dialog.Content)`
   padding: 36px;
-  background-color: white;
   border-radius: ${p => p.theme.sizes.borderRadiusL};
   box-shadow: ${p => p.theme.effects.shadow};
+  background-color: ${p => p.theme.colors.background};
 
   position: fixed;
   top: 50%;
@@ -381,10 +381,10 @@ const DialogContent = styled(Dialog.Content)`
   gap: 24px;
 
   &[data-state='open'] {
-    animation: ${contentOpen} 250ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: ${contentOpen} 300ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   &[data-state='closed'] {
-    animation: ${contentClose} 100ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: ${contentClose} 300ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 `

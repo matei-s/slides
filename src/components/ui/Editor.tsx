@@ -45,7 +45,7 @@ const Display = styled(SyntaxHighlighter).attrs({ useInlineStyles: false })`
   position: absolute;
   background: none !important;
   padding: 1em 2ch !important;
-  border: 1px solid transparent;
+  border: ${p => p.theme.sizes.editor.borderWidth} solid transparent;
   inset: 0;
   pointer-events: none;
 
@@ -75,7 +75,7 @@ const Display = styled(SyntaxHighlighter).attrs({ useInlineStyles: false })`
 `
 
 const EditorWrapper = styled.div`
-  font-size: ${p => p.theme.sizes.editorFontSize};
+  font-size: ${p => p.theme.sizes.editor.fontSize};
 
   position: relative;
   width: 100%;
@@ -83,18 +83,26 @@ const EditorWrapper = styled.div`
 `
 
 const TextArea = styled.textarea.attrs({})`
+  outline: none;
+
   border-radius: ${p => p.theme.sizes.borderRadiusM};
   border-color: ${p => p.theme.colors.editor.border};
-  border-width: ${p => p.theme.sizes.editorBorderWidth};
+  border-width: ${p => p.theme.sizes.editor.borderWidth};
+
+  background-color: ${p => p.theme.colors.editor.backgorund};
+  :focus {
+    background-color: ${p => p.theme.colors.editor.focusedBackground};
+  }
+  transition: background-color 100ms;
+
   width: 100%;
   height: 100%;
   padding: 1em 2ch;
   resize: none;
   font-weight: 100;
-  /* color: transparent; */
+  color: transparent;
   caret-color: black;
   font-family: inherit;
-  outline: none;
 
   ::placeholder {
     opacity: 0.5;
