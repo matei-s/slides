@@ -22,8 +22,10 @@ export function Layout({ children }: { children: ReactNode }) {
     <LayoutWrapper
       onMouseMove={e => setMousePosition({ x: e.pageX, y: e.pageY })}
     >
-      <Header showing={recentlyMoved} />
-      {children}
+      <Dialog.Root>
+        <Header showing={recentlyMoved} />
+        {children}
+      </Dialog.Root>
     </LayoutWrapper>
   )
 }
@@ -67,6 +69,5 @@ const LayoutWrapper = styled.main`
   background: ${p => p.theme.colors.background};
   display: flex;
   flex-direction: column;
-  padding-top: 120px;
   align-items: center;
 `

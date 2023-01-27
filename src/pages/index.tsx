@@ -4,8 +4,23 @@ import styled, { keyframes } from 'styled-components'
 import { useLocalStorage } from '~/lib/hooks'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Cross1Icon } from '@radix-ui/react-icons'
-import { Button } from '~/components/ui'
+import { Button, sourceCodePro } from '~/components/ui'
 import { Editor } from '~/components/ui'
+import { useEffect, useRef, useState } from 'react'
+import { evaluate, EvaluateOptions } from '@mdx-js/mdx'
+import * as runtime from 'react/jsx-runtime'
+import * as provider from '@mdx-js/react'
+import { MDXProvider } from '@mdx-js/react'
+import { MDXModule } from 'mdx/types'
+import { ErrorBoundary, useErrorHandler } from 'react-error-boundary'
+import { Timer } from '~/components/mdx'
+import { H1, H2 } from '~/components/typography'
+
+const components = {
+  Timer,
+  h1: H1,
+  h2: H2,
+}
 
 export default function Home() {
   const [editorContent, setEditorContent] = useLocalStorage(
@@ -191,26 +206,93 @@ export default function Home() {
           rel='apple-touch-startup-image'
         />
       </Head>
-      <Dialog.Root>
-        <Layout>
-          <Dialog.Portal>
-            <DialogOverlay />
-            <DialogContent>
-              <DialogDescription>
-                Edit the content of the slide here (it&apos;s automatically
-                saved).
-              </DialogDescription>
-              <DialogClose asChild>
-                <Button>
-                  <Cross1Icon />
-                </Button>
-              </DialogClose>
-              <Editor {...{ editorContent, setEditorContent }} />
-            </DialogContent>
-          </Dialog.Portal>
-        </Layout>
-      </Dialog.Root>
+      <Layout>
+        <ErrorBoundary
+          fallbackRender={({ error, resetErrorBoundary }) => {
+            console.log('catching errors!!!')
+            return <Error>{error.message}</Error>
+          }}
+          resetKeys={[editorContent]}
+        >
+          <MDXProvider components={components}>
+            <SlideContent editorContent={editorContent} />
+          </MDXProvider>
+        </ErrorBoundary>
+        <DialogOverlay />
+        <DialogContent>
+          <DialogDescription>
+            Edit the content of the slide here (it&apos;s automatically saved).
+          </DialogDescription>
+          <DialogClose asChild>
+            <Button>
+              <Cross1Icon />
+            </Button>
+          </DialogClose>
+          <Editor {...{ editorContent, setEditorContent }} />
+        </DialogContent>
+      </Layout>
     </>
+  )
+}
+
+const Error = styled.div`
+  position: fixed;
+  width: clamp(200px, 90vw, 600px);
+  bottom: 50px;
+  padding: 16px 24px;
+  border-radius: ${p => p.theme.sizes.borderRadiusS};
+  background: ${p => p.theme.colors.error.background};
+  color: ${p => p.theme.colors.error.text};
+  font-weight: 400;
+  font-size: ${18 / 16}rem;
+  box-shadow: ${p => p.theme.effects.shadow};
+  z-index: 2;
+  font-family: ${sourceCodePro.style.fontFamily};
+  font-weight: 600;
+  ::selection {
+    background: black;
+  }
+  border-top: 1px solid hsl(0deg 90% 90% / 0.5);
+  border-bottom: 1px solid hsl(0deg 90% 20% / 0.2);
+`
+
+const SlideWrapper = styled.div`
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+`
+
+const SlideContent = ({ editorContent }: { editorContent: string }) => {
+  const [mdxValue, setMdxValue] = useState<MDXModule>({
+    default: () => <div />,
+  } as MDXModule)
+  const firstRender = useRef(true)
+
+  const MDXContent = mdxValue.default
+  const handleError = useErrorHandler()
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => {
+        firstRender.current = false
+        evaluate(editorContent, {
+          ...(runtime as EvaluateOptions),
+          ...provider,
+        }).then(result => setMdxValue(result), handleError)
+      },
+      firstRender.current ? 0 : 1500,
+    )
+    return () => clearTimeout(timer)
+  }, [editorContent, handleError])
+
+  return (
+    <SlideWrapper>
+      <MDXContent />
+    </SlideWrapper>
   )
 }
 
@@ -219,9 +301,10 @@ const DialogDescription = styled(Dialog.Description)`
 `
 
 const DialogClose = styled(Dialog.Close)`
+  --space: 16px;
   position: absolute;
-  right: 24px;
-  top: 24px;
+  right: var(--space);
+  top: var(--space);
 `
 
 const overlayOpen = keyframes`
@@ -280,11 +363,10 @@ const contentClose = keyframes`
 `
 
 const DialogContent = styled(Dialog.Content)`
-  padding: 24px;
+  padding: 36px;
   background-color: white;
   border-radius: ${p => p.theme.sizes.borderRadiusL};
-  box-shadow: hsl(206 22% 7% / 35%) 0px 10px 38px -10px,
-    hsl(206 22% 7% / 20%) 0px 10px 20px -15px;
+  box-shadow: ${p => p.theme.effects.shadow};
 
   position: fixed;
   top: 50%;
