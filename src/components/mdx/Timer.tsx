@@ -23,7 +23,7 @@ const computeTimerValue = ({ from, duration, until }: TimerProps) => {
   return computeUntil(until)
 }
 
-const computeFromDuration = (from, duration) => [1, 2, 3]
+const computeFromDuration = (from: string, duration: string) => [1, 2, 3]
 
 const twoDigitPad = (x: number) => {
   return x.toString().padStart(2, '0')
