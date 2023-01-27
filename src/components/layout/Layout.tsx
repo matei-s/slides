@@ -50,10 +50,6 @@ const HeaderWrapper = styled.header<{ showing: boolean }>`
   top: 0;
   padding: 16px;
 
-  :focus {
-    opacity: 1;
-  }
-
   :has(:focus) {
     opacity: 1;
   }

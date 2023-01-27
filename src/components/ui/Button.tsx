@@ -6,8 +6,10 @@ export const Button = styled.button`
   border-radius: 4px;
   color: ${p => p.theme.colors.button.content};
   background: ${p => p.theme.colors.background};
+  position: relative;
 
   transition: filter 100ms;
+  cursor: pointer;
 
   & svg {
     width: 28px;
@@ -26,6 +28,6 @@ export const Button = styled.button`
   :after {
     content: '';
     position: absolute;
-    inset: -10px;
+    inset: -8px;
   }
 `
