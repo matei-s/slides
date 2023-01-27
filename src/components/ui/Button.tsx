@@ -28,6 +28,6 @@ export const Button = styled.button`
   :after {
     content: '';
     position: absolute;
-    inset: -8px;
+    inset: -4px;
   }
 `

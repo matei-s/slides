@@ -256,16 +256,6 @@ const Error = styled.div`
   border-bottom: 1px solid hsl(0deg 90% 20% / 0.2);
 `
 
-const SlideWrapper = styled.div`
-  height: 100%;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-`
-
 const SlideContent = ({ editorContent }: { editorContent: string }) => {
   const [mdxValue, setMdxValue] = useState<MDXModule>({
     default: () => <div />,
@@ -291,10 +281,26 @@ const SlideContent = ({ editorContent }: { editorContent: string }) => {
 
   return (
     <SlideWrapper>
+      <FlexSpacer />
       <MDXContent />
+      <FlexSpacer size={1.5} />
     </SlideWrapper>
   )
 }
+
+const SlideWrapper = styled.div`
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+`
+
+const FlexSpacer = styled.div<{ size?: number }>`
+  flex: ${p => p.size ?? 1};
+`
 
 const DialogDescription = styled(Dialog.Description)`
   font-size: ${18 / 16}rem;
