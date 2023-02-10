@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { sourceCodePro } from '../ui'
+import { sourceCodePro } from './Editor'
 
 type TimerProps = {
   from: string
@@ -72,7 +72,7 @@ export function Timer({ from, duration, until }: TimerProps) {
 const CounterWrapper = styled.div`
   position: fixed;
   font-size: ${40 / 16}rem;
-  right: 64px;
-  top: 32px;
+  right: 32px;
+  top: 16px;
   font-family: ${sourceCodePro.style.fontFamily};
 `

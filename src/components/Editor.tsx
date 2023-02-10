@@ -89,9 +89,9 @@ const TextArea = styled.textarea.attrs({})`
   border-color: ${p => p.theme.colors.editor.border};
   border-width: ${p => p.theme.sizes.editor.borderWidth};
 
-  background-color: ${p => p.theme.colors.editor.backgorund};
+  background-color: ${p => p.theme.colors.slate3};
   :focus {
-    background-color: ${p => p.theme.colors.editor.focusedBackground};
+    background-color: ${p => p.theme.colors.slate1};
   }
   transition: background-color 100ms;
 
@@ -99,12 +99,13 @@ const TextArea = styled.textarea.attrs({})`
   height: 100%;
   padding: 1em 2ch;
   resize: none;
-  font-weight: 100;
+  font-weight: 300;
   color: transparent;
   caret-color: black;
   font-family: inherit;
 
   ::placeholder {
+    font-weight: 400;
     opacity: 0.5;
   }
 `

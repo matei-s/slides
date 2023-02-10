@@ -18,6 +18,8 @@ const sizes = {
 
 const colors = {
   background: cyan.cyan1,
+  ...cyan,
+  ...slate,
 
   editor: {
     border: slate.slate7,

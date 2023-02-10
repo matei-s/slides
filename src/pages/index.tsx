@@ -1,11 +1,11 @@
 import Head from 'next/head'
-import { Layout } from '~/components/layout'
+import { Layout } from '~/components/Layout'
 import styled, { keyframes } from 'styled-components'
 import { useLocalStorage } from '~/lib/hooks'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Cross1Icon } from '@radix-ui/react-icons'
-import { Button, sourceCodePro } from '~/components/ui'
-import { Editor } from '~/components/ui'
+import { Button } from '~/components/Button'
+import { Editor, sourceCodePro } from '~/components/Editor'
 import { useEffect, useRef, useState } from 'react'
 import { evaluate, EvaluateOptions } from '@mdx-js/mdx'
 import * as runtime from 'react/jsx-runtime'
@@ -13,8 +13,8 @@ import * as provider from '@mdx-js/react'
 import { MDXProvider } from '@mdx-js/react'
 import { MDXModule } from 'mdx/types'
 import { ErrorBoundary, useErrorHandler } from 'react-error-boundary'
-import { Timer } from '~/components/mdx'
-import { H1, H2 } from '~/components/typography'
+import { Timer } from '~/components/MDX'
+import { H1, H2 } from '~/components/Typography'
 
 const components = {
   Timer,
@@ -26,6 +26,7 @@ export default function Home() {
   const [editorContent, setEditorContent] = useLocalStorage(
     'editor-content',
     '',
+    1000,
   )
 
   return (
@@ -283,7 +284,7 @@ const SlideContent = ({ editorContent }: { editorContent: string }) => {
     <SlideWrapper>
       <FlexSpacer />
       <MDXContent />
-      <FlexSpacer size={1.5} />
+      <FlexSpacer size={2} />
     </SlideWrapper>
   )
 }
@@ -309,8 +310,8 @@ const DialogDescription = styled(Dialog.Description)`
 const DialogClose = styled(Dialog.Close)`
   --space: 16px;
   position: absolute;
-  right: var(--space);
   top: var(--space);
+  left: var(--space);
 `
 
 const overlayOpen = keyframes`
@@ -348,49 +349,53 @@ const DialogOverlay = styled(Dialog.Overlay)`
 const contentOpen = keyframes`
   from {
     opacity: 0;
-    transform: translate(-50%, -49%) scale(1);
+    transform: translateX(-100%) scale(1);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translateX(0) scale(1);
   }
 `
 
 const contentClose = keyframes`
   from {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translateX(0) scale(1);
   }
 
   to {
     opacity: 0;
-    transform: translate(-50%, -49%) scale(1);
+    transform: translateX(-100%) scale(1);
   }
 `
 
 const DialogContent = styled(Dialog.Content)`
   padding: 36px;
+  padding-top: 64px;
   border-radius: ${p => p.theme.sizes.borderRadiusL};
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
   box-shadow: ${p => p.theme.effects.shadow};
   background-color: ${p => p.theme.colors.background};
 
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90vw;
-  max-width: 900px;
-  height: clamp(400px, calc(100% - 200px), 100%);
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 30vw;
+
+  min-width: 500px;
+  max-width: 800px;
 
   display: flex;
   flex-direction: column;
   gap: 24px;
 
   &[data-state='open'] {
-    animation: ${contentOpen} 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: ${contentOpen} 400ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   &[data-state='closed'] {
-    animation: ${contentClose} 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: ${contentClose} 400ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 `

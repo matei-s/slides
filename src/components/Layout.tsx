@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useRef, useState } from 'react'
 import { Pencil1Icon } from '@radix-ui/react-icons'
 import styled from 'styled-components'
 import * as Dialog from '@radix-ui/react-dialog'
-import { Button } from '../ui'
+import { Button } from './Button'
 
 export function Layout({ children }: { children: ReactNode }) {
   const [mousePosition, setMousePosition] = useState({})
@@ -13,7 +13,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
     const timer = setTimeout(() => {
       setRecentlyMoved(false)
-    }, 1000)
+    }, 500)
 
     return () => clearTimeout(timer)
   }, [mousePosition])

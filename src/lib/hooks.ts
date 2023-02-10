@@ -6,7 +6,11 @@ import {
   useState,
 } from 'react'
 
-export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
+export function useLocalStorage<T>(
+  key: string,
+  initialValue: T | (() => T),
+  pollingRate?: number,
+) {
   const [state, setState] = useState(initialValue)
 
   const decoratedSetState = useCallback(
@@ -23,6 +27,18 @@ export function useLocalStorage<T>(key: string, initialValue: T | (() => T)) {
       setState(JSON.parse(item))
     }
   }, [key])
+
+  useEffect(() => {
+    if (pollingRate) {
+      const interval = setInterval(() => {
+        const item = localStorage.getItem(key)
+        if (item !== null) {
+          setState(JSON.parse(item))
+        }
+      }, pollingRate)
+      return () => clearInterval(interval)
+    }
+  }, [key, pollingRate])
 
   return [state, decoratedSetState] as const
 }
