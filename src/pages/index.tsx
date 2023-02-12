@@ -19,16 +19,22 @@ import { evaluateSync } from '@mdx-js/mdx'
 import * as runtime from 'react/jsx-runtime'
 import { MDXProvider, useMDXComponents } from '@mdx-js/react'
 import { ErrorBoundary } from 'react-error-boundary'
-import { components } from '~/components/MDXComponents'
+import { components, globalTimeAtom } from '~/components/MDXComponents'
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { getErrorMessage, logError } from '~/lib/error'
 import TestRenderer from 'react-test-renderer'
 import React from 'react'
 import { RunnerOptions } from '@mdx-js/mdx/lib/util/resolve-evaluate-options'
+import { useInterval } from '~/lib/hooks'
 const runtimeOptions = runtime as unknown as RunnerOptions
 
 export default function Home() {
   const nonTrimmableContent = useAtomValue(nonTrimmableContentAtom)
+  const setGlobalTime = useSetAtom(globalTimeAtom)
+
+  useInterval(() => {
+    setGlobalTime(() => Date.now())
+  }, 1000)
 
   return (
     <>
@@ -231,7 +237,7 @@ export default function Home() {
           <MDXEditor />
           <EditorError />
           <DialogDescription>Slide Editor</DialogDescription>
-          <div>The editor content is automatically saved 👍</div>
+          <div>The content is automatically saved 👍</div>
         </DialogContent>
       </Layout>
     </>
@@ -323,6 +329,7 @@ const SlideContent = () => {
       try {
         const result = evaluateSync(editorContent, {
           ...runtimeOptions,
+          development: false,
           useMDXComponents,
         })
         TestRenderer.create(React.createElement(result.default, { components }))
@@ -352,6 +359,7 @@ const SlideContent = () => {
       try {
         const result = evaluateSync(checkpointEditorContent, {
           ...runtimeOptions,
+          development: false,
           useMDXComponents,
         })
         TestRenderer.create(React.createElement(result.default, { components }))

@@ -1,7 +1,8 @@
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
-import { ReactNode, useEffect, useRef, useState } from 'react'
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
+import { useInterval } from '~/lib/hooks'
 import { sourceCodePro } from './MDXEditor'
 
 type TimerProps = {
@@ -47,10 +48,10 @@ function parseUntil(until: string) {
   return [hours, minutes] as const
 }
 
-const computeTimerValues = ({ until }: { until: string }) => {
+const computeTimerValues = ({ until, now }: { until: string; now: number }) => {
   const [hours, minutes] = parseUntil(until)
 
-  const currentTime = new Date()
+  const currentTime = new Date(now)
   const stopTimeMinutesOffset = hours * 60 + minutes
   const currentTimeMinutesOffset =
     currentTime.getHours() * 60 + currentTime.getMinutes()
@@ -89,40 +90,17 @@ const timerIntervalAtom = atom(
   },
 )
 
+export const globalTimeAtom = atom(Date.now())
+
 export function Timer({ until }: TimerProps & { children: ReactNode }) {
   validateProps({ until })
-  const renderRef = useRef(0)
 
-  const [timerValues, setTimerValues] = useState<number[]>(() =>
-    computeTimerValues({ until }),
-  )
-  const setTimerInterval = useSetAtom(timerIntervalAtom)
+  const globalTime = useAtomValue(globalTimeAtom)
 
-  useEffect(() => {
-    if (renderRef.current < 1) {
-      renderRef.current += 1
-      return
-    }
-
-    const timerValues = computeTimerValues({ until })
-    setTimerValues(timerValues)
-
-    if (timerValues.reduce((a, b) => a + b) === 0) {
-      return
-    }
-
-    const newInterval = setInterval(() => {
-      setTimerValues(computeTimerValues({ until }))
-    }, 1000)
-
-    setTimerInterval(newInterval)
-
-    return () => {
-      clearInterval(newInterval)
-    }
-  }, [until, setTimerInterval])
-
-  const [hours, minutes, seconds] = timerValues
+  const [hours, minutes, seconds] = computeTimerValues({
+    now: globalTime,
+    until,
+  })
 
   const hourSegment = hours ? `${twoDigitPadded(hours)}:` : ''
   const minuteSegment = `${twoDigitPadded(minutes)}:`
