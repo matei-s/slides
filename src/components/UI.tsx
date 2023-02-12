@@ -58,6 +58,8 @@ export const BackLink = styled(Link)`
 `
 
 export const PageContent = styled.div`
+  max-width: 800px;
+
   & > h1 {
     margin-bottom: 2rem;
   }

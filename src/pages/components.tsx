@@ -51,5 +51,4 @@ const ComponentsLayout = styled(Layout)`
   padding: 32px;
   padding-top: 100px;
   padding-bottom: 64px;
-  align-items: start;
 `
