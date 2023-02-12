@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
+import { ReactNode, useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { sourceCodePro } from './MDXEditor'
 
@@ -77,21 +79,48 @@ const computeTimerValues = ({ until }: { until: string }) => {
   return [timerHours, timerMinutes, timerSeconds]
 }
 
-export function Timer({ until }: TimerProps) {
+const timerIntervalInnerAtom = atom<NodeJS.Timer | undefined>(undefined)
+const timerIntervalAtom = atom(
+  get => get(timerIntervalInnerAtom),
+  (get, set, newInterval: NodeJS.Timer) => {
+    const prevInterval = get(timerIntervalInnerAtom)
+    clearInterval(prevInterval)
+    set(timerIntervalInnerAtom, newInterval)
+  },
+)
+
+export function Timer({ until }: TimerProps & { children: ReactNode }) {
   validateProps({ until })
+  const renderRef = useRef(0)
 
   const [timerValues, setTimerValues] = useState<number[]>(() =>
     computeTimerValues({ until }),
   )
+  const setTimerInterval = useSetAtom(timerIntervalAtom)
 
   useEffect(() => {
-    setTimerValues(computeTimerValues({ until }))
-    const interval = setInterval(() => {
+    if (renderRef.current < 1) {
+      renderRef.current += 1
+      return
+    }
+
+    const timerValues = computeTimerValues({ until })
+    setTimerValues(timerValues)
+
+    if (timerValues.reduce((a, b) => a + b) === 0) {
+      return
+    }
+
+    const newInterval = setInterval(() => {
       setTimerValues(computeTimerValues({ until }))
     }, 1000)
 
-    return () => clearInterval(interval)
-  }, [until])
+    setTimerInterval(newInterval)
+
+    return () => {
+      clearInterval(newInterval)
+    }
+  }, [until, setTimerInterval])
 
   const [hours, minutes, seconds] = timerValues
 

@@ -14,7 +14,7 @@ import {
   sourceCodePro,
   validMDXAtom,
 } from '~/components/MDXEditor'
-import { ReactNode, useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { evaluateSync } from '@mdx-js/mdx'
 import * as runtime from 'react/jsx-runtime'
 import { MDXProvider, useMDXComponents } from '@mdx-js/react'
