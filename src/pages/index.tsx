@@ -5,28 +5,19 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { Cross1Icon } from '@radix-ui/react-icons'
 import { Button } from '~/components/Button'
 import {
-  checkpointEditorContentAtom,
   checkpointMdxModuleAtom,
   MDXEditor,
-  editorContentAtom,
-  mdxModuleAtom,
   nonTrimmableContentAtom,
-  sourceCodePro,
-  validMDXAtom,
+  EditorError,
+  MDXContent,
 } from '~/components/MDXEditor'
-import { useEffect } from 'react'
-import { evaluateSync } from '@mdx-js/mdx'
-import * as runtime from 'react/jsx-runtime'
-import { MDXProvider, useMDXComponents } from '@mdx-js/react'
+import { MDXProvider } from '@mdx-js/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { components, globalTimeAtom } from '~/components/MDXComponents'
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { getErrorMessage, logError } from '~/lib/error'
-import TestRenderer from 'react-test-renderer'
+import { useAtomValue, useSetAtom } from 'jotai'
+import { getErrorMessage } from '~/lib/error'
 import React from 'react'
-import { RunnerOptions } from '@mdx-js/mdx/lib/util/resolve-evaluate-options'
 import { useInterval } from '~/lib/hooks'
-const runtimeOptions = runtime as unknown as RunnerOptions
 
 export default function Home() {
   const nonTrimmableContent = useAtomValue(nonTrimmableContentAtom)
@@ -40,125 +31,33 @@ export default function Home() {
     <>
       <Head>
         <title>Training Slides</title>
-        <meta
-          name='description'
-          content='Simple web-based Markdown slides editor.'
-        />
+        <meta name='description' content='Simple web-based Markdown slides editor.' />
         <meta name='viewport' content='width=device-width, initial-scale=1' />
         <meta name='msapplication-TileColor' content='#FFF' />
         <meta name='theme-color' content='#FFF' />
         <link rel='icon' href='/favicon-32x32.png' />
-        <link
-          rel='apple-touch-icon'
-          sizes='57x57'
-          href='/apple-icon-57x57.png'
-        />
-        <link
-          rel='apple-touch-icon'
-          sizes='60x60'
-          href='/apple-icon-60x60.png'
-        />
-        <link
-          rel='apple-touch-icon'
-          sizes='72x72'
-          href='/apple-icon-72x72.png'
-        />
-        <link
-          rel='apple-touch-icon'
-          sizes='114x114'
-          href='/apple-icon-114x114.png'
-        />
-        <link
-          rel='apple-touch-icon'
-          sizes='76x76'
-          href='/apple-icon-76x76.png'
-        />
-        <link
-          rel='apple-touch-icon'
-          sizes='120x120'
-          href='/apple-icon-120x120.png'
-        />
-        <link
-          rel='apple-touch-icon'
-          sizes='152x152'
-          href='/apple-icon-152x152.png'
-        />
-        <link
-          rel='apple-touch-icon'
-          sizes='180x180'
-          href='/apple-icon-180x180.png'
-        />
-        <link
-          rel='icon'
-          type='image/png'
-          href='/favicon-32x32.png'
-          sizes='32x32'
-        />
-        <link
-          rel='icon'
-          type='image/png'
-          href='/android-icon-36x36.png'
-          sizes='36x36'
-        />
-        <link
-          rel='icon'
-          type='image/png'
-          href='/android-icon-48x48.png'
-          sizes='48x48'
-        />
-        <link
-          rel='icon'
-          type='image/png'
-          href='/android-icon-72x72.png'
-          sizes='72x72'
-        />
-        <link
-          rel='icon'
-          type='image/png'
-          href='/android-icon-96x96.png'
-          sizes='96x96'
-        />
-        <link
-          rel='icon'
-          type='image/png'
-          href='/android-icon-144x144.png'
-          sizes='144x144'
-        />
-        <link
-          rel='icon'
-          type='image/png'
-          href='/android-icon-192x192.png'
-          sizes='192x192'
-        />
-        <link
-          rel='icon'
-          type='image/png'
-          href='/favicon-96x96.png'
-          sizes='96x96'
-        />
-        <link
-          rel='icon'
-          type='image/png'
-          href='/favicon-16x16.png'
-          sizes='16x16'
-        />
+        <link rel='apple-touch-icon' sizes='57x57' href='/apple-icon-57x57.png' />
+        <link rel='apple-touch-icon' sizes='60x60' href='/apple-icon-60x60.png' />
+        <link rel='apple-touch-icon' sizes='72x72' href='/apple-icon-72x72.png' />
+        <link rel='apple-touch-icon' sizes='114x114' href='/apple-icon-114x114.png' />
+        <link rel='apple-touch-icon' sizes='76x76' href='/apple-icon-76x76.png' />
+        <link rel='apple-touch-icon' sizes='120x120' href='/apple-icon-120x120.png' />
+        <link rel='apple-touch-icon' sizes='152x152' href='/apple-icon-152x152.png' />
+        <link rel='apple-touch-icon' sizes='180x180' href='/apple-icon-180x180.png' />
+        <link rel='icon' type='image/png' href='/favicon-32x32.png' sizes='32x32' />
+        <link rel='icon' type='image/png' href='/android-icon-36x36.png' sizes='36x36' />
+        <link rel='icon' type='image/png' href='/android-icon-48x48.png' sizes='48x48' />
+        <link rel='icon' type='image/png' href='/android-icon-72x72.png' sizes='72x72' />
+        <link rel='icon' type='image/png' href='/android-icon-96x96.png' sizes='96x96' />
+        <link rel='icon' type='image/png' href='/android-icon-144x144.png' sizes='144x144' />
+        <link rel='icon' type='image/png' href='/android-icon-192x192.png' sizes='192x192' />
+        <link rel='icon' type='image/png' href='/favicon-96x96.png' sizes='96x96' />
+        <link rel='icon' type='image/png' href='/favicon-16x16.png' sizes='16x16' />
         <meta name='msapplication-TileImage' content='/ms-icon-144x144.png' />
-        <meta
-          name='msapplication-square70x70logo'
-          content='/ms-icon-70x70.png'
-        />
-        <meta
-          name='msapplication-square150x150logo'
-          content='/ms-icon-150x150.png'
-        />
-        <meta
-          name='msapplication-wide310x150logo'
-          content='/ms-icon-310x150.png'
-        />
-        <meta
-          name='msapplication-square310x310logo'
-          content='/ms-icon-310x310.png'
-        />
+        <meta name='msapplication-square70x70logo' content='/ms-icon-70x70.png' />
+        <meta name='msapplication-square150x150logo' content='/ms-icon-150x150.png' />
+        <meta name='msapplication-wide310x150logo' content='/ms-icon-310x150.png' />
+        <meta name='msapplication-square310x310logo' content='/ms-icon-310x310.png' />
         <link
           href='/apple-startup-320x460.png'
           media='(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 1)'
@@ -179,11 +78,7 @@ export default function Home() {
           media='(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 1) and (orientation: landscape)'
           rel='apple-touch-startup-image'
         />
-        <link
-          href='/apple-startup-750x1024.png'
-          media=''
-          rel='apple-touch-startup-image'
-        />
+        <link href='/apple-startup-750x1024.png' media='' rel='apple-touch-startup-image' />
         <link
           href='/apple-startup-750x1294.png'
           media='(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)'
@@ -244,153 +139,11 @@ export default function Home() {
   )
 }
 
-const ErrorContent = styled.pre`
-  white-space: pre-wrap;
-  overflow: auto;
-  height: 100%;
-  padding: 8px 16px;
-  max-height: 160px;
-
-  font-weight: 400;
-  font-size: ${18 / 16}rem;
-  z-index: 2;
-  font-family: ${sourceCodePro.style.fontFamily};
-  font-weight: 600;
-  ::selection {
-    background: black;
-  }
-`
-
-const ErrorWrapper = styled.div`
-  box-shadow: ${p => p.theme.effects.shadow};
-  border-radius: ${p => p.theme.sizes.borderRadiusS};
-  background: ${p => p.theme.colors.tomato8};
-  color: ${p => p.theme.colors.error.text};
-  overflow: hidden;
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  bottom: 12px;
-
-  border-top: 1px solid hsl(0deg 90% 90% / 0.5);
-  border-bottom: 1px solid hsl(0deg 90% 20% / 0.2);
-
-  transition-property: opacity;
-
-  &[data-visible='false'] {
-    transition-duration: 50ms;
-    opacity: 0;
-  }
-
-  &[data-visible='true'] {
-    transition-duration: 100ms;
-    opacity: 1;
-  }
-`
-
-function EditorError() {
-  const message = useAtomValue(editorErrorAtom)
-  const prevMessage = useAtomValue(prevEditorErrorAtom)
-
-  const visible = message.length > 0
-
-  return (
-    <ErrorWrapper data-visible={visible}>
-      <ErrorContent>{visible ? message : prevMessage}</ErrorContent>
-    </ErrorWrapper>
-  )
-}
-
-const editorErrorHistoryAtom = atom(['', ''])
-const editorErrorAtom = atom(
-  get => get(editorErrorHistoryAtom)[0],
-  (get, set, newError: string) => {
-    const errors = get(editorErrorHistoryAtom)
-    set(editorErrorHistoryAtom, [newError, ...errors])
-  },
-)
-const prevEditorErrorAtom = atom(get => get(editorErrorHistoryAtom)[1])
-
 const SlideContent = () => {
-  const [mdxModule, setMdxModule] = useAtom(mdxModuleAtom)
-  const [checkpointMdxModule, setCheckpointMdxModule] = useAtom(
-    checkpointMdxModuleAtom,
-  )
-  const editorContent = useAtomValue(editorContentAtom)
-  const [checkpointEditorContent, setCheckpointEditorContent] = useAtom(
-    checkpointEditorContentAtom,
-  )
-  const setEditorError = useSetAtom(editorErrorAtom)
-  const [validMDX, setValidMDX] = useAtom(validMDXAtom)
-
-  // this one deals with rendering content
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        const result = evaluateSync(editorContent, {
-          ...runtimeOptions,
-          development: false,
-          useMDXComponents,
-        })
-        TestRenderer.create(React.createElement(result.default, { components }))
-
-        setMdxModule(result)
-        setValidMDX(true)
-        setEditorError('')
-      } catch (error) {
-        logError({ error, label: 'render' })
-        const message = getErrorMessage(error)
-        setEditorError(message.trim())
-      }
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [editorContent, setMdxModule, setEditorError, setValidMDX])
-
-  // this one deals with the checkpoint logic
-  useEffect(() => {
-    if (validMDX && mdxModule) {
-      setCheckpointEditorContent(editorContent)
-      setCheckpointMdxModule(mdxModule)
-      return
-    }
-
-    if (!checkpointMdxModule && checkpointEditorContent) {
-      try {
-        const result = evaluateSync(checkpointEditorContent, {
-          ...runtimeOptions,
-          development: false,
-          useMDXComponents,
-        })
-        TestRenderer.create(React.createElement(result.default, { components }))
-        setCheckpointMdxModule(result)
-        setValidMDX(true)
-        setEditorError('')
-      } catch (error) {
-        logError({ error, label: 'checkpoint render' })
-        const message = getErrorMessage(error)
-        setEditorError(message.trim())
-      }
-    }
-  }, [
-    editorContent,
-    validMDX,
-    mdxModule,
-    checkpointMdxModule,
-    checkpointEditorContent,
-
-    setCheckpointEditorContent,
-    setCheckpointMdxModule,
-    setEditorError,
-    setValidMDX,
-  ])
-
-  const CheckpointMdxContent = checkpointMdxModule?.default ?? null
-
   return (
     <SlideWrapper>
       <FlexSpacer />
-      {CheckpointMdxContent ? <CheckpointMdxContent /> : null}
+      <MDXContent />
       <FlexSpacer size={2} />
     </SlideWrapper>
   )
