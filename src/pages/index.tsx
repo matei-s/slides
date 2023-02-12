@@ -14,22 +14,20 @@ import {
   sourceCodePro,
   validMDXAtom,
 } from '~/components/MDXEditor'
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useRef } from 'react'
 import { evaluateSync } from '@mdx-js/mdx'
 import * as runtime from 'react/jsx-runtime'
 import { MDXProvider, useMDXComponents } from '@mdx-js/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { components } from '~/components/MDXComponents'
-import { useAtom, useAtomValue, useSetAtom } from 'jotai'
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { getErrorMessage, logError } from '~/lib/error'
-import { atomWithStorage } from 'jotai/utils'
 import TestRenderer from 'react-test-renderer'
 import React from 'react'
 import { RunnerOptions } from '@mdx-js/mdx/lib/util/resolve-evaluate-options'
 const runtimeOptions = runtime as unknown as RunnerOptions
 
 export default function Home() {
-  const error = useAtomValue(errorAtom)
   const nonTrimmableContent = useAtomValue(nonTrimmableContentAtom)
 
   return (
@@ -214,7 +212,8 @@ export default function Home() {
       <Layout>
         <ErrorBoundary
           fallbackRender={({ error }) => {
-            return <Error>{error.message}</Error>
+            const message = getErrorMessage(error)
+            return <pre>{message}</pre>
           }}
           resetKeys={[nonTrimmableContent]}
         >
@@ -224,16 +223,15 @@ export default function Home() {
         </ErrorBoundary>
         <DialogOverlay />
         <DialogContent>
-          <DialogDescription>
-            Edit the content of the slide here (it&apos;s automatically saved).
-          </DialogDescription>
           <DialogClose asChild>
             <Button>
               <Cross1Icon />
             </Button>
           </DialogClose>
           <MDXEditor />
-          <Error>{error}</Error>
+          <EditorError />
+          <DialogDescription>Slide Editor</DialogDescription>
+          <div>The editor content is automatically saved 👍</div>
         </DialogContent>
       </Layout>
     </>
@@ -244,8 +242,8 @@ const ErrorContent = styled.pre`
   white-space: pre-wrap;
   overflow: auto;
   height: 100%;
-  padding: 16px 24px;
-  max-height: 150px;
+  padding: 8px 16px;
+  max-height: 160px;
 
   font-weight: 400;
   font-size: ${18 / 16}rem;
@@ -274,6 +272,7 @@ const ErrorWrapper = styled.div`
   transition-property: opacity;
 
   &[data-visible='false'] {
+    transition-duration: 50ms;
     opacity: 0;
   }
 
@@ -283,17 +282,28 @@ const ErrorWrapper = styled.div`
   }
 `
 
-function Error({ children }: { children: ReactNode }) {
+function EditorError() {
+  const message = useAtomValue(editorErrorAtom)
+  const prevMessage = useAtomValue(prevEditorErrorAtom)
+
+  const visible = message.length > 0
+
   return (
-    <ErrorWrapper
-      data-visible={children ? children.toString().length > 0 : false}
-    >
-      <ErrorContent>{children}</ErrorContent>
+    <ErrorWrapper data-visible={visible}>
+      <ErrorContent>{visible ? message : prevMessage}</ErrorContent>
     </ErrorWrapper>
   )
 }
 
-const errorAtom = atomWithStorage('editor-error', '')
+const editorErrorHistoryAtom = atom(['', ''])
+const editorErrorAtom = atom(
+  get => get(editorErrorHistoryAtom)[0],
+  (get, set, newError: string) => {
+    const errors = get(editorErrorHistoryAtom)
+    set(editorErrorHistoryAtom, [newError, ...errors])
+  },
+)
+const prevEditorErrorAtom = atom(get => get(editorErrorHistoryAtom)[1])
 
 const SlideContent = () => {
   const [mdxModule, setMdxModule] = useAtom(mdxModuleAtom)
@@ -304,7 +314,7 @@ const SlideContent = () => {
   const [checkpointEditorContent, setCheckpointEditorContent] = useAtom(
     checkpointEditorContentAtom,
   )
-  const setError = useSetAtom(errorAtom)
+  const setEditorError = useSetAtom(editorErrorAtom)
   const [validMDX, setValidMDX] = useAtom(validMDXAtom)
 
   // this one deals with rendering content
@@ -319,16 +329,16 @@ const SlideContent = () => {
 
         setMdxModule(result)
         setValidMDX(true)
-        setError('')
+        setEditorError('')
       } catch (error) {
         logError({ error, label: 'render' })
         const message = getErrorMessage(error)
-        setError((message ? 'Evaluate Error:\n' : '') + message.trim())
+        setEditorError(message.trim())
       }
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [editorContent, setMdxModule, setError, setValidMDX])
+  }, [editorContent, setMdxModule, setEditorError, setValidMDX])
 
   // this one deals with the checkpoint logic
   useEffect(() => {
@@ -347,13 +357,11 @@ const SlideContent = () => {
         TestRenderer.create(React.createElement(result.default, { components }))
         setCheckpointMdxModule(result)
         setValidMDX(true)
-        setError('')
+        setEditorError('')
       } catch (error) {
         logError({ error, label: 'checkpoint render' })
         const message = getErrorMessage(error)
-        setError(
-          (message ? 'Checkpoint Evaluate Error:\n' : '') + message.trim(),
-        )
+        setEditorError(message.trim())
       }
     }
   }, [
@@ -365,7 +373,7 @@ const SlideContent = () => {
 
     setCheckpointEditorContent,
     setCheckpointMdxModule,
-    setError,
+    setEditorError,
     setValidMDX,
   ])
 
@@ -395,7 +403,15 @@ const FlexSpacer = styled.div<{ size?: number }>`
 `
 
 const DialogDescription = styled(Dialog.Description)`
-  font-size: ${18 / 16}rem;
+  font-size: ${24 / 16}rem;
+  font-weight: 500;
+  position: absolute;
+  height: 70px;
+
+  top: 0px;
+  left: 80px;
+  align-items: center;
+  display: flex;
 `
 
 const DialogClose = styled(Dialog.Close)`
@@ -439,30 +455,26 @@ const DialogOverlay = styled(Dialog.Overlay)`
 
 const contentOpen = keyframes`
   from {
-    opacity: 0;
     transform: translateX(-100%) scale(1);
   }
   to {
-    opacity: 1;
     transform: translateX(0) scale(1);
   }
 `
 
 const contentClose = keyframes`
   from {
-    opacity: 1;
     transform: translateX(0) scale(1);
   }
 
   to {
-    opacity: 0;
     transform: translateX(-100%) scale(1);
   }
 `
 
 const DialogContent = styled(Dialog.Content)`
-  padding: 20px;
-  padding-top: 80px;
+  padding: 16px;
+  padding-top: 70px;
   border-radius: 8px;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
@@ -480,13 +492,13 @@ const DialogContent = styled(Dialog.Content)`
 
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 12px;
 
   &[data-state='open'] {
     animation: ${contentOpen} 400ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   &[data-state='closed'] {
-    animation: ${contentClose} 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: ${contentClose} 100ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 `

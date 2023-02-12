@@ -3,72 +3,104 @@ import styled from 'styled-components'
 import { sourceCodePro } from './MDXEditor'
 
 type TimerProps = {
-  from: string
-  duration: string
-} & { until: string }
+  until: string
+}
 
-const validateProps = ({ from, duration, until }: TimerProps) => {
-  if (!until) {
+function checkUntilFormat(until: string) {
+  if (!until.match(/^\d\d:\d\d$/)) {
     throw new Error(
-      `Invalid Timer properties. You need to specify 'until'. Example: <Timer until='14:50'/>
-      `,
+      [
+        "Invalid 'until' property. It should be a string following the 'HH:MM' format. Example:",
+        '',
+        "<Timer until='14:50'/>",
+      ].join('\n'),
     )
   }
 }
 
-const computeTimerValues = ({ from, duration, until }: TimerProps) => {
-  validateProps({ from, duration, until })
-  if (from && duration) {
-    return computeFromDuration(from, duration)
+function checkUntil(until: string) {
+  if (until === undefined || typeof until !== 'string') {
+    throw new Error(
+      [
+        "Invalid Timer properties. You need to specify 'until'. Example:",
+        '',
+        "<Timer until='14:50'/>",
+      ].join('\n'),
+    )
   }
-  return computeUntil(until)
 }
 
-const computeFromDuration = (from: string, duration: string) => [1, 2, 3]
+const validateProps = ({ until }: TimerProps) => {
+  checkUntil(until)
+  checkUntilFormat(until)
+}
 
 const twoDigitPadded = (x: number) => {
   return x.toString().padStart(2, '0')
 }
 
-const computeUntil = (until: string) => {
-  const stopTime = Date.parse(until)
-  if (!stopTime) {
-    throw new Error(
-      `Please provide a valid 'until' value for the Timer component. For example: '12 Jan 2023 14:50'`,
-    )
+function parseUntil(until: string) {
+  const [hoursStr, minutesStr] = until.split(':')
+  const [hours, minutes] = [hoursStr, minutesStr].map(s => parseInt(s))
+  return [hours, minutes] as const
+}
+
+const computeTimerValues = ({ until }: { until: string }) => {
+  const [hours, minutes] = parseUntil(until)
+
+  const currentTime = new Date()
+  const stopTimeMinutesOffset = hours * 60 + minutes
+  const currentTimeMinutesOffset =
+    currentTime.getHours() * 60 + currentTime.getMinutes()
+
+  const stopTime = new Date()
+  stopTime.setHours(hours)
+  stopTime.setMinutes(minutes)
+  stopTime.setSeconds(0)
+
+  const cycleOffset = 6 * 60 // 6 hours
+
+  if (stopTimeMinutesOffset < currentTimeMinutesOffset - cycleOffset) {
+    stopTime.setTime(stopTime.getTime() + 1000 * 60 * 60 * 24)
   }
-  const now = Date.now()
-  if (now >= stopTime) {
+
+  if (stopTime < currentTime) {
     return [0, 0, 0]
   }
 
-  const seconds = Math.floor((stopTime - now) / 1000) % 60
-  const minutes = Math.floor((stopTime - now) / (1000 * 60)) % 60
-  const hours = Math.floor((stopTime - now) / (1000 * 60 * 60)) % 60
+  const timeDelta = stopTime.getTime() - currentTime.getTime()
 
-  return [hours, minutes, seconds]
+  const timerSeconds = Math.floor(timeDelta / 1000) % 60
+  const timerMinutes = Math.floor(timeDelta / (1000 * 60)) % 60
+  const timerHours = Math.floor(timeDelta / (1000 * 60 * 60)) % 60
+
+  return [timerHours, timerMinutes, timerSeconds]
 }
 
-export function Timer({ from, duration, until }: TimerProps) {
+export function Timer({ until }: TimerProps) {
+  validateProps({ until })
+
   const [timerValues, setTimerValues] = useState<number[]>(() =>
-    computeTimerValues({ from, duration, until }),
+    computeTimerValues({ until }),
   )
 
   useEffect(() => {
-    setTimerValues(computeTimerValues({ from, duration, until }))
+    setTimerValues(computeTimerValues({ until }))
     const interval = setInterval(() => {
-      setTimerValues(computeTimerValues({ from, duration, until }))
-    }, 500)
+      setTimerValues(computeTimerValues({ until }))
+    }, 1000)
 
     return () => clearInterval(interval)
-  }, [from, duration, until])
+  }, [until])
 
-  const [hours, minutes, seconds] = timerValues.map(twoDigitPadded)
+  const [hours, minutes, seconds] = timerValues
+
+  const hourSegment = hours ? `${twoDigitPadded(hours)}:` : ''
+  const minuteSegment = `${twoDigitPadded(minutes)}:`
+  const secondSegment = `${twoDigitPadded(seconds)}`
 
   return (
-    <CounterWrapper>
-      {timerValues.length ? `${hours}:${minutes}:${seconds}` : null}
-    </CounterWrapper>
+    <CounterWrapper>{`${hourSegment}${minuteSegment}${secondSegment}`}</CounterWrapper>
   )
 }
 
