@@ -1,13 +1,6 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
-const useIsomorphicLayoutEffect =
-  typeof window !== 'undefined' ? useLayoutEffect : useEffect
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
 export function useInterval(callback: () => void, delay: number | null) {
   const savedCallback = useRef(callback)
@@ -29,79 +22,4 @@ export function useInterval(callback: () => void, delay: number | null) {
 
     return () => clearInterval(id)
   }, [delay])
-}
-
-export function useLocalStorage<T>(
-  key: string,
-  initialValue: T | (() => T),
-  pollingRate?: number,
-) {
-  const [state, setState] = useState(initialValue)
-
-  const decoratedSetState = useCallback(
-    (newState: T) => {
-      localStorage.setItem(key, JSON.stringify(newState))
-      setState(newState)
-    },
-    [key],
-  )
-
-  useEffect(() => {
-    const item = localStorage.getItem(key)
-    if (item !== null) {
-      setState(JSON.parse(item))
-    }
-  }, [key])
-
-  useEffect(() => {
-    if (pollingRate) {
-      const interval = setInterval(() => {
-        const item = localStorage.getItem(key)
-        if (item !== null) {
-          setState(JSON.parse(item))
-        }
-      }, pollingRate)
-      return () => clearInterval(interval)
-    }
-  }, [key, pollingRate])
-
-  return [state, decoratedSetState] as const
-}
-
-export const useAsync = <T, E = string>(
-  asyncFunction: () => Promise<T>,
-  immediate = true,
-) => {
-  const [status, setStatus] = useState<
-    'idle' | 'pending' | 'success' | 'error'
-  >('idle')
-  const [value, setValue] = useState<T | null>(null)
-  const [error, setError] = useState<E | null>(null)
-  // The execute function wraps asyncFunction and
-  // handles setting state for pending, value, and error.
-  // useCallback ensures the below useEffect is not called
-  // on every render, but only if asyncFunction changes.
-  const execute = useCallback(() => {
-    setStatus('pending')
-    setValue(null)
-    setError(null)
-    return asyncFunction()
-      .then((response: any) => {
-        setValue(response)
-        setStatus('success')
-      })
-      .catch((error: any) => {
-        setError(error)
-        setStatus('error')
-      })
-  }, [asyncFunction])
-  // Call execute if we want to fire it right away.
-  // Otherwise execute can be called later, such as
-  // in an onClick handler.
-  useEffect(() => {
-    if (immediate) {
-      execute()
-    }
-  }, [execute, immediate])
-  return { execute, status, value, error }
 }

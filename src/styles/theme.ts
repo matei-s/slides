@@ -1,4 +1,4 @@
-import { cyan, slate, blue, orange, yellow, tomato } from '@radix-ui/colors'
+import { cyan, slate, blue, orange, tomato } from '@radix-ui/colors'
 import { DefaultTheme } from 'styled-components'
 import 'styled-components'
 

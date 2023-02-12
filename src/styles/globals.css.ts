@@ -77,6 +77,15 @@ const CSSGlobalStyles = styled.createGlobalStyle`
   #__next {
     height: 100%;
   }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  body {
+    background-color: ${p => p.theme.colors.slate1};
+  }
 `
 
 export default CSSGlobalStyles
