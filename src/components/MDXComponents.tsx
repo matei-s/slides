@@ -122,16 +122,22 @@ const CounterWrapper = styled.div`
 const H1 = styled.h1`
   font-size: 4rem;
   font-weight: 600;
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
 `
 
 const H2 = styled.h2`
   font-size: 2.5rem;
   font-weight: 600;
+  margin-bottom: 1.5rem;
+`
+
+const P = styled.p`
+  font-size: 1.5rem;
 `
 
 export const components = {
   Timer,
   h1: H1,
   h2: H2,
+  p: P,
 }
