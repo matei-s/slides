@@ -4,13 +4,7 @@ import styled, { keyframes } from 'styled-components'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Cross1Icon } from '@radix-ui/react-icons'
 import { Button } from '~/components/Button'
-import {
-  checkpointMdxModuleAtom,
-  MDXEditor,
-  nonTrimmableContentAtom,
-  EditorError,
-  MDXContent,
-} from '~/components/MDXEditor'
+import { MDXEditor, nonTrimmableContentAtom, EditorError, MDXContent } from '~/components/MDXEditor'
 import { MDXProvider } from '@mdx-js/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { components, globalTimeAtom } from '~/components/MDXComponents'
@@ -144,7 +138,7 @@ const SlideContent = () => {
     <SlideWrapper>
       <FlexSpacer />
       <MDXContent />
-      <FlexSpacer size={2} />
+      <FlexSpacer size={1.5} />
     </SlideWrapper>
   )
 }

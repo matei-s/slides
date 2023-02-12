@@ -1,12 +1,24 @@
-import { ReactNode, useEffect, useState } from 'react'
-import { Pencil1Icon } from '@radix-ui/react-icons'
+import { ReactNode, useEffect, useRef, useState } from 'react'
+import {
+  EnterFullScreenIcon,
+  ExitFullScreenIcon,
+  Pencil1Icon,
+  UpdateIcon,
+} from '@radix-ui/react-icons'
 import styled from 'styled-components'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Button } from './Button'
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'
+import { checkpointEditorContentAtom, checkpointMdxModuleAtom } from './MDXEditor'
+
+const pageAtom = atom<HTMLElement | null>(null)
+const isFullscreenAtom = atom(false)
 
 export function Layout({ children }: { children: ReactNode }) {
   const [mousePosition, setMousePosition] = useState({})
   const [recentlyMoved, setRecentlyMoved] = useState(false)
+  const pageRef = useRef(null)
+  const setPage = useSetAtom(pageAtom)
 
   useEffect(() => {
     setRecentlyMoved(true)
@@ -18,10 +30,14 @@ export function Layout({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer)
   }, [mousePosition])
 
+  useEffect(() => {
+    setPage(pageRef.current)
+  }, [setPage])
+
+  useEffect(() => {})
+
   return (
-    <LayoutWrapper
-      onMouseMove={e => setMousePosition({ x: e.pageX, y: e.pageY })}
-    >
+    <LayoutWrapper ref={pageRef} onMouseMove={e => setMousePosition({ x: e.pageX, y: e.pageY })}>
       <Dialog.Root>
         <Header showing={recentlyMoved} />
         {children}
@@ -31,6 +47,13 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 function Header({ showing }: { showing: boolean }) {
+  const page = useAtomValue(pageAtom)
+  const isFullscreen = useRef(false)
+
+  useEffect(() => {
+    isFullscreen.current = document.fullscreenElement !== null
+  })
+
   return (
     <HeaderWrapper showing={showing}>
       <Dialog.Trigger asChild>
@@ -38,6 +61,22 @@ function Header({ showing }: { showing: boolean }) {
           <Pencil1Icon />
         </Button>
       </Dialog.Trigger>
+      <Button
+        onClick={() => {
+          console.log('fullscreen', isFullscreen)
+          if (!document.fullscreenEnabled) {
+            return
+          }
+
+          if (isFullscreen.current) {
+            document.exitFullscreen().then(() => {})
+          } else {
+            page?.requestFullscreen().then(() => {})
+          }
+        }}
+      >
+        {isFullscreen.current ? <ExitFullScreenIcon /> : <EnterFullScreenIcon />}
+      </Button>
     </HeaderWrapper>
   )
 }
@@ -49,7 +88,10 @@ const HeaderWrapper = styled.header<{ showing: boolean }>`
   position: absolute;
   top: 0;
   padding: 16px;
-  height: 100px;
+  padding-bottom: 32px;
+
+  display: flex;
+  gap: 8px;
 
   :has(:focus) {
     opacity: 1;
