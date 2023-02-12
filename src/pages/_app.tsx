@@ -5,6 +5,7 @@ import { lightTheme } from '~/styles/theme'
 import CSSGlobalStyles from '~/styles/globals.css'
 import { Poppins } from '@next/font/google'
 import { Provider as AtomProvider } from 'jotai'
+import { Analytics } from '@vercel/analytics/react'
 
 const poppins = Poppins({
   subsets: ['latin', 'latin-ext'],
@@ -23,6 +24,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <AtomProvider>
         <ThemeProvider theme={lightTheme}>
           <Component {...pageProps} />
+          <Analytics />
           <CSSGlobalStyles />
         </ThemeProvider>
       </AtomProvider>
