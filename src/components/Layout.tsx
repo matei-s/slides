@@ -12,7 +12,6 @@ import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { checkpointEditorContentAtom, checkpointMdxModuleAtom } from './MDXEditor'
 
 const pageAtom = atom<HTMLElement | null>(null)
-const isFullscreenAtom = atom(false)
 
 export function Layout({ children }: { children: ReactNode }) {
   const [mousePosition, setMousePosition] = useState({})

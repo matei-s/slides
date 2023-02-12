@@ -2,7 +2,6 @@ import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
-import { useInterval } from '~/lib/hooks'
 import { sourceCodePro } from './MDXEditor'
 
 type TimerProps = {
@@ -53,8 +52,7 @@ const computeTimerValues = ({ until, now }: { until: string; now: number }) => {
 
   const currentTime = new Date(now)
   const stopTimeMinutesOffset = hours * 60 + minutes
-  const currentTimeMinutesOffset =
-    currentTime.getHours() * 60 + currentTime.getMinutes()
+  const currentTimeMinutesOffset = currentTime.getHours() * 60 + currentTime.getMinutes()
 
   const stopTime = new Date()
   stopTime.setHours(hours)
@@ -106,9 +104,7 @@ export function Timer({ until }: TimerProps & { children: ReactNode }) {
   const minuteSegment = `${twoDigitPadded(minutes)}:`
   const secondSegment = `${twoDigitPadded(seconds)}`
 
-  return (
-    <CounterWrapper>{`${hourSegment}${minuteSegment}${secondSegment}`}</CounterWrapper>
-  )
+  return <CounterWrapper>{`${hourSegment}${minuteSegment}${secondSegment}`}</CounterWrapper>
 }
 
 const CounterWrapper = styled.div`
@@ -122,17 +118,28 @@ const CounterWrapper = styled.div`
 const H1 = styled.h1`
   font-size: 4rem;
   font-weight: 600;
-  margin-bottom: 1.5rem;
 `
 
 const H2 = styled.h2`
   font-size: 2.5rem;
   font-weight: 600;
-  margin-bottom: 1.5rem;
+  margin-top: 1.5rem;
+  width: 100%;
 `
 
 const P = styled.p`
+  width: 100%;
   font-size: 1.5rem;
+  text-align: start;
+  margin-top: 1rem;
+`
+
+const Em = styled.em`
+  letter-spacing: 1px;
+`
+
+const Code = styled.code`
+  font-family: ${sourceCodePro.style.fontFamily};
 `
 
 export const components = {
@@ -140,4 +147,6 @@ export const components = {
   h1: H1,
   h2: H2,
   p: P,
+  code: Code,
+  em: Em,
 }

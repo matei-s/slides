@@ -148,7 +148,9 @@ const ContentWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: opacity 100ms 300ms;
+  transition: opacity 300ms 300ms;
+  padding: 32px;
+  max-width: 800px;
 
   &[data-visible='true'] {
     opacity: 1;
