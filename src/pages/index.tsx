@@ -1,33 +1,36 @@
 import Head from 'next/head'
 import { Layout } from '~/components/Layout'
 import styled, { keyframes } from 'styled-components'
-import { useLocalStorage } from '~/lib/hooks'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Cross1Icon } from '@radix-ui/react-icons'
 import { Button } from '~/components/Button'
-import { Editor, sourceCodePro } from '~/components/Editor'
-import { useEffect, useRef, useState } from 'react'
-import { evaluate, EvaluateOptions } from '@mdx-js/mdx'
+import {
+  checkpointEditorContentAtom,
+  checkpointMdxModuleAtom,
+  MDXEditor,
+  editorContentAtom,
+  mdxModuleAtom,
+  nonTrimmableContentAtom,
+  sourceCodePro,
+  validMDXAtom,
+} from '~/components/MDXEditor'
+import { ReactNode, useEffect } from 'react'
+import { evaluateSync } from '@mdx-js/mdx'
 import * as runtime from 'react/jsx-runtime'
-import * as provider from '@mdx-js/react'
-import { MDXProvider } from '@mdx-js/react'
-import { MDXModule } from 'mdx/types'
-import { ErrorBoundary, useErrorHandler } from 'react-error-boundary'
-import { Timer } from '~/components/MDX'
-import { H1, H2 } from '~/components/Typography'
-
-const components = {
-  Timer,
-  h1: H1,
-  h2: H2,
-}
+import { MDXProvider, useMDXComponents } from '@mdx-js/react'
+import { ErrorBoundary } from 'react-error-boundary'
+import { components } from '~/components/MDXComponents'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
+import { getErrorMessage, logError } from '~/lib/error'
+import { atomWithStorage } from 'jotai/utils'
+import TestRenderer from 'react-test-renderer'
+import React from 'react'
+import { RunnerOptions } from '@mdx-js/mdx/lib/util/resolve-evaluate-options'
+const runtimeOptions = runtime as unknown as RunnerOptions
 
 export default function Home() {
-  const [editorContent, setEditorContent] = useLocalStorage(
-    'editor-content',
-    '',
-    1000,
-  )
+  const error = useAtomValue(errorAtom)
+  const nonTrimmableContent = useAtomValue(nonTrimmableContentAtom)
 
   return (
     <>
@@ -213,10 +216,10 @@ export default function Home() {
           fallbackRender={({ error }) => {
             return <Error>{error.message}</Error>
           }}
-          resetKeys={[editorContent]}
+          resetKeys={[nonTrimmableContent]}
         >
           <MDXProvider components={components}>
-            <SlideContent editorContent={editorContent} />
+            <SlideContent />
           </MDXProvider>
         </ErrorBoundary>
         <DialogOverlay />
@@ -229,61 +232,149 @@ export default function Home() {
               <Cross1Icon />
             </Button>
           </DialogClose>
-          <Editor {...{ editorContent, setEditorContent }} />
+          <MDXEditor />
+          <Error>{error}</Error>
         </DialogContent>
       </Layout>
     </>
   )
 }
 
-const Error = styled.div`
-  position: fixed;
-  width: clamp(200px, 90vw, 600px);
-  bottom: 50px;
+const ErrorContent = styled.pre`
+  white-space: pre-wrap;
+  overflow: auto;
+  height: 100%;
   padding: 16px 24px;
-  border-radius: ${p => p.theme.sizes.borderRadiusS};
-  background: ${p => p.theme.colors.error.background};
-  color: ${p => p.theme.colors.error.text};
+  max-height: 150px;
+
   font-weight: 400;
   font-size: ${18 / 16}rem;
-  box-shadow: ${p => p.theme.effects.shadow};
   z-index: 2;
   font-family: ${sourceCodePro.style.fontFamily};
   font-weight: 600;
   ::selection {
     background: black;
   }
-  border-top: 1px solid hsl(0deg 90% 90% / 0.5);
-  border-bottom: 1px solid hsl(0deg 90% 20% / 0.2);
 `
 
-const SlideContent = ({ editorContent }: { editorContent: string }) => {
-  const [mdxValue, setMdxValue] = useState<MDXModule>({
-    default: () => <div />,
-  } as MDXModule)
-  const renderCount = useRef(0)
+const ErrorWrapper = styled.div`
+  box-shadow: ${p => p.theme.effects.shadow};
+  border-radius: ${p => p.theme.sizes.borderRadiusS};
+  background: ${p => p.theme.colors.tomato8};
+  color: ${p => p.theme.colors.error.text};
+  overflow: hidden;
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 12px;
 
-  const MDXContent = mdxValue.default
-  const handleError = useErrorHandler()
+  border-top: 1px solid hsl(0deg 90% 90% / 0.5);
+  border-bottom: 1px solid hsl(0deg 90% 20% / 0.2);
 
+  transition-property: opacity;
+
+  &[data-visible='false'] {
+    opacity: 0;
+  }
+
+  &[data-visible='true'] {
+    transition-duration: 100ms;
+    opacity: 1;
+  }
+`
+
+function Error({ children }: { children: ReactNode }) {
+  return (
+    <ErrorWrapper
+      data-visible={children ? children.toString().length > 0 : false}
+    >
+      <ErrorContent>{children}</ErrorContent>
+    </ErrorWrapper>
+  )
+}
+
+const errorAtom = atomWithStorage('editor-error', '')
+
+const SlideContent = () => {
+  const [mdxModule, setMdxModule] = useAtom(mdxModuleAtom)
+  const [checkpointMdxModule, setCheckpointMdxModule] = useAtom(
+    checkpointMdxModuleAtom,
+  )
+  const editorContent = useAtomValue(editorContentAtom)
+  const [checkpointEditorContent, setCheckpointEditorContent] = useAtom(
+    checkpointEditorContentAtom,
+  )
+  const setError = useSetAtom(errorAtom)
+  const [validMDX, setValidMDX] = useAtom(validMDXAtom)
+
+  // this one deals with rendering content
   useEffect(() => {
-    const timer = setTimeout(
-      () => {
-        renderCount.current += 1
-        evaluate(editorContent, {
-          ...(runtime as EvaluateOptions),
-          ...provider,
-        }).then(result => setMdxValue(result), handleError)
-      },
-      renderCount.current < 2 ? 0 : 1500,
-    )
+    const timer = setTimeout(() => {
+      try {
+        const result = evaluateSync(editorContent, {
+          ...runtimeOptions,
+          useMDXComponents,
+        })
+        TestRenderer.create(React.createElement(result.default, { components }))
+
+        setMdxModule(result)
+        setValidMDX(true)
+        setError('')
+      } catch (error) {
+        logError({ error, label: 'render' })
+        const message = getErrorMessage(error)
+        setError((message ? 'Evaluate Error:\n' : '') + message.trim())
+      }
+    }, 300)
+
     return () => clearTimeout(timer)
-  }, [editorContent, handleError])
+  }, [editorContent, setMdxModule, setError, setValidMDX])
+
+  // this one deals with the checkpoint logic
+  useEffect(() => {
+    if (validMDX && mdxModule) {
+      setCheckpointEditorContent(editorContent)
+      setCheckpointMdxModule(mdxModule)
+      return
+    }
+
+    if (!checkpointMdxModule && checkpointEditorContent) {
+      try {
+        const result = evaluateSync(checkpointEditorContent, {
+          ...runtimeOptions,
+          useMDXComponents,
+        })
+        TestRenderer.create(React.createElement(result.default, { components }))
+        setCheckpointMdxModule(result)
+        setValidMDX(true)
+        setError('')
+      } catch (error) {
+        logError({ error, label: 'checkpoint render' })
+        const message = getErrorMessage(error)
+        setError(
+          (message ? 'Checkpoint Evaluate Error:\n' : '') + message.trim(),
+        )
+      }
+    }
+  }, [
+    editorContent,
+    validMDX,
+    mdxModule,
+    checkpointMdxModule,
+    checkpointEditorContent,
+
+    setCheckpointEditorContent,
+    setCheckpointMdxModule,
+    setError,
+    setValidMDX,
+  ])
+
+  const CheckpointMdxContent = checkpointMdxModule?.default ?? null
 
   return (
     <SlideWrapper>
       <FlexSpacer />
-      <MDXContent />
+      {CheckpointMdxContent ? <CheckpointMdxContent /> : null}
       <FlexSpacer size={2} />
     </SlideWrapper>
   )
@@ -370,9 +461,9 @@ const contentClose = keyframes`
 `
 
 const DialogContent = styled(Dialog.Content)`
-  padding: 36px;
-  padding-top: 64px;
-  border-radius: ${p => p.theme.sizes.borderRadiusL};
+  padding: 20px;
+  padding-top: 80px;
+  border-radius: 8px;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
   box-shadow: ${p => p.theme.effects.shadow};

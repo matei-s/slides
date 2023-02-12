@@ -4,6 +4,7 @@ import { ThemeProvider } from 'styled-components'
 import { lightTheme } from '~/styles/theme'
 import CSSGlobalStyles from '~/styles/globals.css'
 import { Poppins } from '@next/font/google'
+import { Provider as AtomProvider } from 'jotai'
 
 const poppins = Poppins({
   subsets: ['latin', 'latin-ext'],
@@ -19,10 +20,12 @@ export default function App({ Component, pageProps }: AppProps) {
           font-family: ${poppins.style.fontFamily};
         }
       `}</style>
-      <ThemeProvider theme={lightTheme}>
-        <Component {...pageProps} />
-        <CSSGlobalStyles />
-      </ThemeProvider>
+      <AtomProvider>
+        <ThemeProvider theme={lightTheme}>
+          <Component {...pageProps} />
+          <CSSGlobalStyles />
+        </ThemeProvider>
+      </AtomProvider>
     </>
   )
 }

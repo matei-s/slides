@@ -4,5 +4,6 @@ const nextConfig = {
   compiler: {
     styledComponents: true,
   },
+  transpilePackages: ['react/jsx-runtime'],
 }
 module.exports = nextConfig

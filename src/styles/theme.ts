@@ -20,6 +20,7 @@ const colors = {
   background: cyan.cyan1,
   ...cyan,
   ...slate,
+  ...tomato,
 
   editor: {
     border: slate.slate7,

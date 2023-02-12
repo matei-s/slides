@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
-import { sourceCodePro } from './Editor'
+import { sourceCodePro } from './MDXEditor'
 
 type TimerProps = {
   from: string
@@ -8,14 +8,15 @@ type TimerProps = {
 } & { until: string }
 
 const validateProps = ({ from, duration, until }: TimerProps) => {
-  if ((!from || !duration) && !until) {
+  if (!until) {
     throw new Error(
-      `Invalid Timer properties. Either specify 'from' AND 'duration', OR 'until'.`,
+      `Invalid Timer properties. You need to specify 'until'. Example: <Timer until='14:50'/>
+      `,
     )
   }
 }
 
-const computeTimerValue = ({ from, duration, until }: TimerProps) => {
+const computeTimerValues = ({ from, duration, until }: TimerProps) => {
   validateProps({ from, duration, until })
   if (from && duration) {
     return computeFromDuration(from, duration)
@@ -25,7 +26,7 @@ const computeTimerValue = ({ from, duration, until }: TimerProps) => {
 
 const computeFromDuration = (from: string, duration: string) => [1, 2, 3]
 
-const twoDigitPad = (x: number) => {
+const twoDigitPadded = (x: number) => {
   return x.toString().padStart(2, '0')
 }
 
@@ -49,22 +50,24 @@ const computeUntil = (until: string) => {
 }
 
 export function Timer({ from, duration, until }: TimerProps) {
-  const [timerValue, setTimerValue] = useState<number[]>([])
+  const [timerValues, setTimerValues] = useState<number[]>(() =>
+    computeTimerValues({ from, duration, until }),
+  )
 
   useEffect(() => {
-    setTimerValue(computeTimerValue({ from, duration, until }))
+    setTimerValues(computeTimerValues({ from, duration, until }))
     const interval = setInterval(() => {
-      setTimerValue(computeTimerValue({ from, duration, until }))
-    }, 1000)
+      setTimerValues(computeTimerValues({ from, duration, until }))
+    }, 500)
 
     return () => clearInterval(interval)
   }, [from, duration, until])
 
-  const [hours, minutes, seconds] = timerValue.map(twoDigitPad)
+  const [hours, minutes, seconds] = timerValues.map(twoDigitPadded)
 
   return (
     <CounterWrapper>
-      {timerValue.length ? `${hours}:${minutes}:${seconds}` : null}
+      {timerValues.length ? `${hours}:${minutes}:${seconds}` : null}
     </CounterWrapper>
   )
 }
@@ -76,3 +79,20 @@ const CounterWrapper = styled.div`
   top: 16px;
   font-family: ${sourceCodePro.style.fontFamily};
 `
+
+const H1 = styled.h1`
+  font-size: 4rem;
+  font-weight: 600;
+  margin-bottom: 3rem;
+`
+
+const H2 = styled.h2`
+  font-size: 2.5rem;
+  font-weight: 600;
+`
+
+export const components = {
+  Timer,
+  h1: H1,
+  h2: H2,
+}

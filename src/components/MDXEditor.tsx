@@ -3,6 +3,9 @@ import styled from 'styled-components'
 import { Source_Code_Pro } from '@next/font/google'
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter'
 import md from 'react-syntax-highlighter/dist/cjs/languages/hljs/markdown'
+import { atom, useAtom, useSetAtom } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
+import { MDXModule } from 'mdx/types'
 
 export const sourceCodePro = Source_Code_Pro({
   subsets: ['latin', 'latin-ext'],
@@ -11,13 +14,24 @@ export const sourceCodePro = Source_Code_Pro({
 
 SyntaxHighlighter.registerLanguage('md', md)
 
-export function Editor({
-  editorContent,
-  setEditorContent,
-}: {
-  editorContent: string
-  setEditorContent: (v: string) => void
-}) {
+export const editorContentAtom = atomWithStorage('editor-content', '')
+export const nonTrimmableContentAtom = atom(get => {
+  const editorContent = get(editorContentAtom)
+  return '*' + editorContent + '*'
+})
+export const mdxModuleAtom = atom<MDXModule | null>(null)
+export const checkpointMdxModuleAtom = atom<MDXModule | null>(null)
+export const checkpointEditorContentAtom = atomWithStorage(
+  'editor-checkpoint',
+  '',
+)
+
+export const validMDXAtom = atom(false)
+
+export function MDXEditor() {
+  const [editorContent, setEditorContent] = useAtom(editorContentAtom)
+  const setValidMDX = useSetAtom(validMDXAtom)
+
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if ((event.metaKey || event.ctrlKey) && event.key == 's') {
       event.preventDefault()
@@ -32,9 +46,10 @@ export function Editor({
       <Display language='md'>{editorContent}</Display>
       <TextArea
         value={editorContent}
-        onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+        onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
+          setValidMDX(false)
           setEditorContent(e.target.value)
-        }
+        }}
         placeholder={'# Title'}
       />
     </EditorWrapper>
@@ -85,8 +100,8 @@ const EditorWrapper = styled.div`
 const TextArea = styled.textarea.attrs({})`
   outline: none;
 
-  border-radius: ${p => p.theme.sizes.borderRadiusM};
-  border-color: ${p => p.theme.colors.editor.border};
+  border-radius: 4px;
+  border-color: ${p => p.theme.colors.slate8};
   border-width: ${p => p.theme.sizes.editor.borderWidth};
 
   background-color: ${p => p.theme.colors.slate3};
