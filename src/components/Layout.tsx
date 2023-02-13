@@ -37,8 +37,6 @@ export function Layout({ children, className }: { children: ReactNode; className
     setPage(pageRef.current)
   }, [setPage])
 
-  useEffect(() => {})
-
   return (
     <LayoutWrapper
       ref={pageRef}
@@ -52,12 +50,16 @@ export function Layout({ children, className }: { children: ReactNode; className
 
 export function Header() {
   const mouseMoved = useAtomValue(mouseMovedAtom)
-
   const page = useAtomValue(pageAtom)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const toggleFullscreen = () => {
-    setIsFullscreen(prev => !prev)
-  }
+
+  useEffect(() => {
+    const fullscreenHandler = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement))
+    }
+    document.addEventListener('fullscreenchange', fullscreenHandler)
+    return () => document.removeEventListener('fullscreenchange', fullscreenHandler)
+  }, [])
 
   return (
     <HeaderWrapper showing={mouseMoved}>
@@ -82,9 +84,9 @@ export function Header() {
             return
           }
           if (isFullscreen) {
-            document.exitFullscreen().then(toggleFullscreen)
+            document.exitFullscreen().then(() => {})
           } else {
-            page?.requestFullscreen().then(toggleFullscreen)
+            page?.requestFullscreen().then(() => {})
           }
         }}
       >
