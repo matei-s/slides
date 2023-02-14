@@ -118,6 +118,8 @@ const CounterWrapper = styled.div`
 const H1 = styled.h1`
   font-size: 4rem;
   font-weight: 600;
+  line-height: 1.1;
+  margin-bottom: 2rem;
 `
 
 const H2 = styled.h2`
