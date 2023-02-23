@@ -3,7 +3,7 @@ import type { AppProps } from 'next/app'
 import { ThemeProvider } from 'styled-components'
 import { lightTheme } from '~/styles/theme'
 import CSSGlobalStyles from '~/styles/globals.css'
-import { Poppins } from '@next/font/google'
+import { Poppins } from 'next/font/google'
 import { Provider as AtomProvider } from 'jotai'
 import { Analytics } from '@vercel/analytics/react'
 

@@ -1,6 +1,6 @@
 import { ChangeEvent, KeyboardEvent, useEffect } from 'react'
 import styled from 'styled-components'
-import { Source_Code_Pro } from '@next/font/google'
+import { Source_Code_Pro } from 'next/font/google'
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter'
 import md from 'react-syntax-highlighter/dist/cjs/languages/hljs/markdown'
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai'

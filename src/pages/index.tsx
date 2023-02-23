@@ -25,7 +25,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Training Slides</title>
+        <title>Slides</title>
         <HeadMeta />
       </Head>
       <Layout>
